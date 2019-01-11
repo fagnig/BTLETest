@@ -20,6 +20,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     client = findViewById(R.id.m_button_client);
     server = findViewById(R.id.m_button_server);
+
+    client.setOnClickListener(this);
+    server.setOnClickListener(this);
   }
 
   @Override
@@ -27,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     if(v==server){
       startActivity(new Intent(this, GattServerActivity.class));
     } else if(v==client){
-      startActivity(new Intent(this, GattServerActivity.class));
+      startActivity(new Intent(this, GattClientActivity.class));
     }
   }
 }

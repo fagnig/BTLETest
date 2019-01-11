@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".GattClientActivity"
-    tools:showIn="@layout/activity_gatt_client">
+    >
 
     <TextView
         android:id="@+id/m_text_client"
@@ -22,4 +22,33 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/m_button_clientsearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="148dp"
+        android:layout_marginTop="22dp"
+        android:layout_marginEnd="138dp"
+        android:layout_marginBottom="199dp"
+        android:text="Search"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/m_text_client"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/m_client_resultlist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="163dp"
+        android:layout_marginTop="39dp"
+        android:layout_marginEnd="163dp"
+        android:text="default"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/m_button_clientsearch" />
+
 </android.support.constraint.ConstraintLayout>

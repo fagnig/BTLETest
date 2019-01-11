@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.AdvertiseCallback;
@@ -19,18 +20,28 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-public class GattServerActivity extends Activity {
+public class GattServerActivity extends Activity implements View.OnClickListener {
 
   private BluetoothManager m_BluetoothManager;
   private BluetoothGattServer m_BluetoothGattServer;
   private BluetoothLeAdvertiser m_BluetoothLeAdvertiser;
   private Set<BluetoothDevice> m_RegisteredDevices = new HashSet<>();
+
+  private Button send;
+  private TextView addressfield;
+  private EditText sendtext;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -40,10 +51,12 @@ public class GattServerActivity extends Activity {
 
     setContentView(R.layout.activity_gatt_server);
 
+
     m_BluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
     BluetoothAdapter bluetoothAdapter = m_BluetoothManager.getAdapter();
     // We can't continue without proper Bluetooth support
     if (checkBluetooth(bluetoothAdapter) != 2) {
+
       finish();
     }
 
@@ -56,6 +69,14 @@ public class GattServerActivity extends Activity {
       startAdvertising();
       startServer();
     }
+
+    send = findViewById(R.id.m_button_serversend);
+    sendtext = findViewById(R.id.m_edittext_servernumber);
+    addressfield = findViewById(R.id.m_server_address);
+
+    addressfield.setText(m_BluetoothManager.getAdapter().getAddress());
+
+    send.setOnClickListener(this);
   }
 
   /**
@@ -84,7 +105,7 @@ public class GattServerActivity extends Activity {
     BluetoothAdapter bluetoothAdapter = m_BluetoothManager.getAdapter();
     m_BluetoothLeAdvertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
     if (m_BluetoothLeAdvertiser == null) {
-      //Can't create advertiser
+      System.out.println("hvad fanden sker der ????hvad fanden sker der ????hvad fanden sker der ????");
       return;
     }
 
@@ -98,7 +119,7 @@ public class GattServerActivity extends Activity {
     AdvertiseData data = new AdvertiseData.Builder()
             .setIncludeDeviceName(true)
             .setIncludeTxPowerLevel(false)
-            .addServiceUuid(new ParcelUuid(BTLEPayload.TIME_SERVICE))
+            .addServiceUuid(new ParcelUuid(BTLEPayload.NUMBER_SERVICE))
             .build();
 
     m_BluetoothLeAdvertiser
@@ -118,12 +139,12 @@ public class GattServerActivity extends Activity {
   private AdvertiseCallback m_AdvertiseCallback = new AdvertiseCallback() {
     @Override
     public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-      //Log.i(TAG, "LE Advertise Started.");
+      Log.i("tis", "LE Advertise Started.");
     }
 
     @Override
     public void onStartFailure(int errorCode) {
-      //Log.w(TAG, "LE Advertise Failed: "+errorCode);
+      Log.w("tis", "LE Advertise Failed: "+errorCode);
     }
   };
 
@@ -139,13 +160,12 @@ public class GattServerActivity extends Activity {
     @Override
     public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
                                             BluetoothGattCharacteristic characteristic) {
-      long now = System.currentTimeMillis();
-      if (BTLEPayload.CURRENT_TIME.equals(characteristic.getUuid())) {
+      if (BTLEPayload.THIS_NUMBER.equals(characteristic.getUuid())) {
         m_BluetoothGattServer.sendResponse(device,
                 requestId,
                 BluetoothGatt.GATT_SUCCESS,
                 0,
-                "pis".getBytes());
+                sendtext.getText().toString().getBytes());
       } else {
         // Invalid characteristic
         m_BluetoothGattServer.sendResponse(device,
@@ -162,11 +182,7 @@ public class GattServerActivity extends Activity {
       if (BTLEPayload.CLIENT_CONFIG.equals(descriptor.getUuid())) {
         //Log.d(TAG, "Config descriptor read");
         byte[] returnValue;
-        if (m_RegisteredDevices.contains(device)) {
-          returnValue = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE;
-        } else {
-          returnValue = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
-        }
+        returnValue = device.getAddress().getBytes();
         m_BluetoothGattServer.sendResponse(device,
                 requestId,
                 BluetoothGatt.GATT_FAILURE,
@@ -215,5 +231,32 @@ public class GattServerActivity extends Activity {
       }
     }
   };
+
+  @Override
+  public void onClick(View v) {
+    if(v==send){
+      notifyRegisteredDevices();
+    }
+  }
+
+  private void notifyRegisteredDevices() {
+    //if (m_RegisteredDevices.isEmpty()) {
+    //  return;
+    //}
+    byte[] number = sendtext.getText().toString().getBytes();
+
+    //Log.i(TAG, "Sending update to " + mRegisteredDevices.size() + " subscribers");
+    BluetoothGattCharacteristic numberChar = m_BluetoothGattServer
+            .getService(BTLEPayload.NUMBER_SERVICE)
+            .getCharacteristic(BTLEPayload.THIS_NUMBER);
+    numberChar.setValue(number);
+
+    addressfield.setText(new String(m_BluetoothGattServer
+            .getService(BTLEPayload.NUMBER_SERVICE)
+            .getCharacteristic(BTLEPayload.THIS_NUMBER).getValue()));
+    for (BluetoothDevice device : m_RegisteredDevices) {
+      m_BluetoothGattServer.notifyCharacteristicChanged(device, numberChar, false);
+    }
+  }
 }
 
