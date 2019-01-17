@@ -232,4 +232,8 @@ public class BTLEServerHandler {
       m_server_BluetoothGattServer.notifyCharacteristicChanged(device, numberChar, false);
     }
   }
+
+  public Set<BluetoothDevice> getConnectedDevices(){
+      return m_server_RegisteredDevices;
+  }
 }
